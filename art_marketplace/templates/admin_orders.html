@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}จัดการคำสั่งซื้อ{% endblock %}
+{% block content %}
+<h3 class="mb-4">จัดการคำสั่งซื้อ</h3>
+
+<div class="mb-3">
+  <a href="{{ url_for('admin.orders') }}" class="btn btn-sm {{ 'btn-primary' if not status else 'btn-outline-primary' }}">ทั้งหมด</a>
+  {% for s, label in [("awaiting_payment", "รอตรวจสลิป"), ("paid", "ชำระแล้ว"), ("shipped", "จัดส่งแล้ว"), ("completed", "สำเร็จ")] %}
+  <a href="{{ url_for('admin.orders', status=s) }}" class="btn btn-sm {{ 'btn-primary' if status == s else 'btn-outline-primary' }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<table class="table align-middle">
+  <thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>ยอด</th><th>สลิป</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>#{{ order.id }}</td>
+      <td>{{ order.customer.username }}</td>
+      <td>฿{{ "%.2f"|format(order.total_amount) }}</td>
+      <td>
+        {% if order.slip_filename %}
+        <a href="{{ order.slip_filename | slip_url }}" target="_blank">ดูสลิป</a>
+        {% else %}-{% endif %}
+      </td>
+      <td>{{ order.STATUS_LABELS.get(order.status, order.status) }}</td>
+      <td class="d-flex gap-1">
+        {% if order.status == "awaiting_payment" %}
+        <form method="post" action="{{ url_for('admin.confirm_payment', order_id=order.id) }}">
+          <button class="btn btn-sm btn-success">ยืนยันการชำระเงิน</button>
+        </form>
+        {% else %}
+        <form method="post" action="{{ url_for('admin.update_status', order_id=order.id) }}" class="d-flex gap-1">
+          <select name="status" class="form-select form-select-sm" style="width:auto">
+            <option value="paid" {% if order.status == "paid" %}selected{% endif %}>ชำระเงินแล้ว</option>
+            <option value="shipped" {% if order.status == "shipped" %}selected{% endif %}>จัดส่งแล้ว</option>
+            <option value="completed" {% if order.status == "completed" %}selected{% endif %}>สำเร็จ</option>
+            <option value="cancelled" {% if order.status == "cancelled" %}selected{% endif %}>ยกเลิก</option>
+          </select>
+          <button class="btn btn-sm btn-outline-primary">อัปเดต</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-muted">ไม่มีคำสั่งซื้อ</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

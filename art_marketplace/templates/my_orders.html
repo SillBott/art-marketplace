@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}คำสั่งซื้อของฉัน{% endblock %}
+{% block content %}
+<h3 class="mb-4">คำสั่งซื้อของฉัน</h3>
+<table class="table align-middle">
+  <thead><tr><th>เลขที่</th><th>วันที่</th><th>ยอดรวม</th><th>สถานะ</th><th></th></tr></thead>
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>#{{ order.id }}</td>
+      <td>{{ order.created_at.strftime("%d/%m/%Y %H:%M") }}</td>
+      <td>฿{{ "%.2f"|format(order.total_amount) }}</td>
+      <td><span class="badge bg-info text-dark">{{ order.STATUS_LABELS.get(order.status, order.status) }}</span></td>
+      <td><a href="{{ url_for('orders.detail', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">ดูรายละเอียด</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5" class="text-muted">ยังไม่มีคำสั่งซื้อ</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

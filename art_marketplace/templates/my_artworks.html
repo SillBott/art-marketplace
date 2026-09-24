@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}ผลงานของฉัน{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h3>ผลงานของฉัน</h3>
+  <a href="{{ url_for('artist.new_artwork') }}" class="btn btn-primary">+ อัปโหลดผลงานใหม่</a>
+</div>
+
+<table class="table align-middle">
+  <thead>
+    <tr>
+      <th>รูป</th><th>ชื่อผลงาน</th><th>ราคา</th><th>สถานะ</th><th>อนุมัติ</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for art in artworks %}
+    <tr>
+      <td style="width:80px">
+        {% if art.preview_filename %}
+        <img src="{{ art.preview_filename | art_url }}" width="60" height="60" style="object-fit:cover" class="rounded">
+        {% endif %}
+      </td>
+      <td>{{ art.title }}</td>
+      <td>฿{{ "%.2f"|format(art.price) }}</td>
+      <td>
+        {% if art.status == 'available' %}<span class="badge bg-success">พร้อมขาย</span>
+        {% else %}<span class="badge bg-secondary">ขายแล้ว</span>{% endif %}
+      </td>
+      <td>
+        {% if art.approved %}<span class="badge bg-success">อนุมัติแล้ว</span>
+        {% else %}<span class="badge bg-warning text-dark">รอตรวจสอบ</span>{% endif %}
+      </td>
+      <td class="text-end">
+        <a href="{{ url_for('artist.edit_artwork', artwork_id=art.id) }}" class="btn btn-sm btn-outline-secondary">แก้ไข</a>
+        <form method="post" action="{{ url_for('artist.delete_artwork', artwork_id=art.id) }}" class="d-inline"
+              onsubmit="return confirm('ยืนยันการลบผลงานนี้?');">
+          <button class="btn btn-sm btn-outline-danger">ลบ</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-muted">ยังไม่มีผลงาน</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

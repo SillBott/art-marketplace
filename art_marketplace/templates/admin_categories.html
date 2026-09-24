@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block title %}จัดการหมวดหมู่{% endblock %}
+{% block content %}
+<h3 class="mb-4">จัดการหมวดหมู่</h3>
+
+<div class="row">
+  <div class="col-md-5">
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.name) }}
+      {{ render_field(form.submit) }}
+    </form>
+  </div>
+  <div class="col-md-7">
+    <table class="table">
+      <thead><tr><th>ชื่อหมวดหมู่</th><th>จำนวนผลงาน</th><th></th></tr></thead>
+      <tbody>
+        {% for c in categories %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.artworks|length }}</td>
+          <td>
+            {% if current_user.is_admin %}
+            <form method="post" action="{{ url_for('admin.delete_category', category_id=c.id) }}"
+                  onsubmit="return confirm('ยืนยันการลบหมวดหมู่นี้?');">
+              <button class="btn btn-sm btn-outline-danger">ลบ</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

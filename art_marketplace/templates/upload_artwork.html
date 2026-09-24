@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block title %}{{ "แก้ไขผลงาน" if mode == "edit" else "อัปโหลดผลงาน" }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <h3 class="mb-4">{{ "แก้ไขผลงาน" if mode == "edit" else "อัปโหลดผลงานใหม่" }}</h3>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.title) }}
+      {{ render_field(form.category_id) }}
+      {{ render_field(form.description) }}
+      {{ render_field(form.technique) }}
+      {{ render_field(form.size) }}
+      {{ render_field(form.price) }}
+      {% if mode == "edit" and artwork and artwork.preview_filename %}
+      <div class="mb-3">
+        <img src="{{ artwork.preview_filename | art_url }}" width="150" class="rounded">
+      </div>
+      {% endif %}
+      {{ render_field(form.image) }}
+      {{ render_field(form.submit) }}
+    </form>
+  </div>
+</div>
+{% endblock %}

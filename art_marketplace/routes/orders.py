@@ -1,0 +1,71 @@
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, session, abort
+from flask_login import login_required, current_user
+
+from extensions import db
+from models import Order, OrderItem, Artwork, AuditLog
+from forms import CheckoutForm
+from utils import save_upload
+from routes.cart import CART_KEY
+
+bp = Blueprint("orders", __name__, url_prefix="/orders")
+
+
+@bp.route("/checkout", methods=["GET", "POST"])
+@login_required
+def checkout():
+    ids = session.get(CART_KEY, [])
+    artworks = Artwork.query.filter(Artwork.id.in_(ids)).all() if ids else []
+    items = [a for a in artworks if a.status == "available"]
+
+    if not items:
+        flash("ตะกร้าว่างหรือผลงานถูกขายไปแล้ว", "warning")
+        return redirect(url_for("cart.view"))
+
+    total = sum(a.price for a in items)
+    form = CheckoutForm()
+
+    if form.validate_on_submit():
+        # Re-check availability at the last moment to avoid double-selling
+        still_available = [a for a in items if a.status == "available"]
+        if not still_available:
+            flash("ผลงานทั้งหมดถูกขายไปแล้ว", "danger")
+            return redirect(url_for("cart.view"))
+
+        order = Order(customer_id=current_user.id, total_amount=sum(a.price for a in still_available))
+        slip_filename = save_upload(form.slip.data, current_app.config["SLIP_UPLOAD_SUBDIR"])
+        order.slip_filename = slip_filename
+        db.session.add(order)
+        db.session.flush()
+
+        for artwork in still_available:
+            db.session.add(OrderItem(order_id=order.id, artwork_id=artwork.id, price=artwork.price))
+            artwork.status = "sold"
+
+        AuditLog.record(current_user.id, "create", "orders", order.id, f"total={order.total_amount}")
+        db.session.commit()
+
+        session[CART_KEY] = []
+        flash("ส่งคำสั่งซื้อแล้ว รอแอดมินตรวจสอบสลิป", "success")
+        return redirect(url_for("orders.detail", order_id=order.id))
+
+    return render_template("checkout.html", form=form, items=items, total=total)
+
+
+@bp.route("/")
+@login_required
+def my_orders():
+    orders = (
+        Order.query.filter_by(customer_id=current_user.id)
+        .order_by(Order.created_at.desc())
+        .all()
+    )
+    return render_template("my_orders.html", orders=orders)
+
+
+@bp.route("/<int:order_id>")
+@login_required
+def detail(order_id):
+    order = Order.query.get_or_404(order_id)
+    if order.customer_id != current_user.id and not current_user.is_staff:
+        abort(403)
+    return render_template("order_detail.html", order=order)

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}จัดการผู้ใช้{% endblock %}
+{% block content %}
+<h3 class="mb-4">จัดการผู้ใช้</h3>
+<table class="table align-middle">
+  <thead><tr><th>ชื่อผู้ใช้</th><th>อีเมล</th><th>สิทธิ์</th><th>สมัครเมื่อ</th><th>เปลี่ยนสิทธิ์</th></tr></thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td>{{ u.username }}</td>
+      <td>{{ u.email }}</td>
+      <td><span class="badge bg-info text-dark">{{ u.role }}</span></td>
+      <td>{{ u.created_at.strftime("%d/%m/%Y") }}</td>
+      <td>
+        <form method="post" action="{{ url_for('admin.change_role', user_id=u.id) }}" class="d-flex gap-1">
+          <select name="role" class="form-select form-select-sm" style="width:auto">
+            {% for r in ["customer", "staff", "admin"] %}
+            <option value="{{ r }}" {% if u.role == r %}selected{% endif %}>{{ r }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-sm btn-outline-primary">บันทึก</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

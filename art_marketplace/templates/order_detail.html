@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}คำสั่งซื้อ #{{ order.id }}{% endblock %}
+{% block content %}
+<h3 class="mb-4">คำสั่งซื้อ #{{ order.id }}</h3>
+
+{% set steps = ["awaiting_payment", "paid", "shipped", "completed"] %}
+{% if order.status in steps %}
+{% set current_step = steps.index(order.status) %}
+<div class="d-flex justify-content-between mb-4">
+  {% for s in steps %}
+  <div class="text-center flex-fill">
+    <div class="badge rounded-pill {{ 'bg-primary' if loop.index0 <= current_step else 'bg-secondary' }} p-2 mb-1">
+      {{ loop.index }}
+    </div>
+    <div class="small">{{ order.STATUS_LABELS[s] }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p><span class="badge bg-danger">{{ order.STATUS_LABELS.get(order.status, order.status) }}</span></p>
+{% endif %}
+
+<table class="table">
+  <thead><tr><th>ผลงาน</th><th>ราคา</th></tr></thead>
+  <tbody>
+    {% for item in order.items %}
+    <tr>
+      <td>{{ item.artwork.title }}</td>
+      <td>฿{{ "%.2f"|format(item.price) }}</td>
+    </tr>
+    {% endfor %}
+    <tr class="fw-bold"><td>รวมทั้งหมด</td><td>฿{{ "%.2f"|format(order.total_amount) }}</td></tr>
+  </tbody>
+</table>
+
+{% if order.slip_filename %}
+<h5>สลิปที่แนบ</h5>
+<img src="{{ order.slip_filename | slip_url }}" width="250" class="rounded border">
+{% endif %}
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}อนุมัติผลงาน{% endblock %}
+{% block content %}
+<h3 class="mb-4">ผลงานรออนุมัติ</h3>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for art in artworks %}
+  <div class="col">
+    <div class="card h-100">
+      {% if art.preview_filename %}
+      <img src="{{ art.preview_filename | art_url }}" class="card-img-top" style="height:200px;object-fit:cover">
+      {% endif %}
+      <div class="card-body">
+        <h6>{{ art.title }}</h6>
+        <p class="small text-muted mb-1">โดย {{ art.artist.display_name }}</p>
+        <p class="small">{{ art.category.name }} · ฿{{ "%.2f"|format(art.price) }}</p>
+        <div class="d-flex gap-2">
+          <form method="post" action="{{ url_for('admin.approve_artwork', artwork_id=art.id) }}">
+            <button class="btn btn-sm btn-success">อนุมัติ</button>
+          </form>
+          <form method="post" action="{{ url_for('admin.reject_artwork', artwork_id=art.id) }}"
+                onsubmit="return confirm('ยืนยันการปฏิเสธและลบผลงานนี้?');">
+            <button class="btn btn-sm btn-outline-danger">ปฏิเสธ</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">ไม่มีผลงานรออนุมัติ</p>
+  {% endfor %}
+</div>
+{% endblock %}

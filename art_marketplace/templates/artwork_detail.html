@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ artwork.title }} - Art Marketplace{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <div class="col-md-6">
+    {% if artwork.preview_filename %}
+    <img src="{{ artwork.preview_filename | art_url }}" class="detail-img" alt="{{ artwork.title }}">
+    {% else %}
+    <img src="https://placehold.co/500x400?text=No+Image" class="detail-img">
+    {% endif %}
+  </div>
+  <div class="col-md-6">
+    <h2>{{ artwork.title }}</h2>
+    <p class="text-muted">โดย {{ artwork.artist.display_name }}
+      {% if artwork.artist.school %} · {{ artwork.artist.school }}{% endif %}
+    </p>
+    <p><span class="badge bg-secondary">{{ artwork.category.name }}</span></p>
+    <p>{{ artwork.description or "ไม่มีคำอธิบาย" }}</p>
+    <ul class="list-unstyled">
+      <li><strong>เทคนิค:</strong> {{ artwork.technique or "-" }}</li>
+      <li><strong>ขนาด:</strong> {{ artwork.size or "-" }}</li>
+      <li><strong>สถานะ:</strong>
+        {% if artwork.status == 'available' %}
+          <span class="text-success">พร้อมจำหน่าย</span>
+        {% else %}
+          <span class="text-danger">ขายแล้ว</span>
+        {% endif %}
+      </li>
+    </ul>
+    <h3 class="text-primary">฿{{ "%.2f"|format(artwork.price) }}</h3>
+
+    {% if artwork.status == 'available' %}
+    <form method="post" action="{{ url_for('cart.add', artwork_id=artwork.id) }}">
+      <button class="btn btn-primary btn-lg">เพิ่มลงตะกร้า</button>
+    </form>
+    {% else %}
+    <button class="btn btn-secondary btn-lg" disabled>ขายแล้ว</button>
+    {% endif %}
+  </div>
+</div>
+
+{% if related %}
+<h4 class="mt-5">ผลงานที่คล้ายกัน</h4>
+<div class="row row-cols-2 row-cols-md-4 g-3">
+  {% for r in related %}
+  <div class="col">
+    <div class="card art-card h-100">
+      {% if r.preview_filename %}
+      <img src="{{ r.preview_filename | art_url }}" alt="{{ r.title }}">
+      {% endif %}
+      <div class="card-body">
+        <h6 class="card-title">{{ r.title }}</h6>
+        <a href="{{ url_for('gallery.detail', artwork_id=r.id) }}" class="btn btn-sm btn-outline-primary w-100">ดู</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

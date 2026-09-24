@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}แกลเลอรี - Art Marketplace{% endblock %}
+{% block content %}
+
+<form class="row g-2 mb-4" method="get">
+  <div class="col-md-5">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="ค้นหาชื่อผลงาน...">
+  </div>
+  <div class="col-md-3">
+    <select name="category" class="form-select">
+      <option value="">ทุกหมวดหมู่</option>
+      {% for c in categories %}
+      <option value="{{ c.id }}" {% if category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select name="sort" class="form-select">
+      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>ใหม่ล่าสุด</option>
+      <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>เก่าสุด</option>
+      <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>ราคาต่ำ-สูง</option>
+      <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>ราคาสูง-ต่ำ</option>
+    </select>
+  </div>
+  <div class="col-md-1">
+    <button class="btn btn-primary w-100">ค้นหา</button>
+  </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+  {% for art in artworks %}
+  <div class="col">
+    <div class="card art-card h-100 position-relative">
+      {% if art.status == 'sold' %}
+        <span class="badge bg-danger status-badge-sold">ขายแล้ว</span>
+      {% endif %}
+      {% if art.preview_filename %}
+        <img src="{{ art.preview_filename | art_url }}" alt="{{ art.title }}">
+      {% else %}
+        <img src="https://placehold.co/400x300?text=No+Image" alt="no image">
+      {% endif %}
+      <div class="card-body">
+        <h6 class="card-title mb-1">{{ art.title }}</h6>
+        <p class="text-muted small mb-1">{{ art.category.name }} · {{ art.artist.display_name }}</p>
+        <p class="fw-bold mb-2">฿{{ "%.2f"|format(art.price) }}</p>
+        <a href="{{ url_for('gallery.detail', artwork_id=art.id) }}" class="btn btn-sm btn-outline-primary w-100">ดูรายละเอียด</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">ยังไม่มีผลงานที่ตรงกับเงื่อนไข</p>
+  {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4">
+  <ul class="pagination justify-content-center">
+    {% for p in range(1, pagination.pages + 1) %}
+    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+      <a class="page-link" href="{{ url_for('gallery.index', page=p, q=q, category=category_id, sort=sort) }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

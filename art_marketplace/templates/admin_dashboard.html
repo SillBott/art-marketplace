@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}แผงควบคุมแอดมิน{% endblock %}
+{% block content %}
+<h3 class="mb-4">แผงควบคุมแอดมิน</h3>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small">ยอดขายรวม</div>
+      <div class="fs-4 fw-bold">฿{{ "%.2f"|format(total_sales) }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small">คำสั่งซื้อทั้งหมด</div>
+      <div class="fs-4 fw-bold">{{ total_orders }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small">รอตรวจสลิป</div>
+      <div class="fs-4 fw-bold text-warning">{{ pending_payment }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center p-3">
+      <div class="text-muted small">ผลงานรออนุมัติ</div>
+      <div class="fs-4 fw-bold text-warning">
+        <a href="{{ url_for('admin.pending_artworks') }}">{{ pending_approval }}</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <h5>ศิลปินขายดี (แบ่งรายได้)</h5>
+    <table class="table table-sm">
+      <thead><tr><th>ศิลปิน</th><th>ขายได้</th><th>รายได้ศิลปิน</th><th>ค่าคอมมิชชั่นแพลตฟอร์ม</th></tr></thead>
+      <tbody>
+        {% for row in artist_rows %}
+        <tr>
+          <td>{{ row.name }}</td>
+          <td>{{ row.sold_count }}</td>
+          <td>฿{{ "%.2f"|format(row.artist_earnings) }}</td>
+          <td>฿{{ "%.2f"|format(row.platform_fee) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted">ยังไม่มีข้อมูลยอดขาย</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-md-6">
+    <h5>คำสั่งซื้อล่าสุด</h5>
+    <table class="table table-sm">
+      <thead><tr><th>เลขที่</th><th>ลูกค้า</th><th>ยอด</th><th>สถานะ</th></tr></thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td><a href="{{ url_for('orders.detail', order_id=order.id) }}">#{{ order.id }}</a></td>
+          <td>{{ order.customer.username }}</td>
+          <td>฿{{ "%.2f"|format(order.total_amount) }}</td>
+          <td>{{ order.STATUS_LABELS.get(order.status, order.status) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="mt-4">
+  <a href="{{ url_for('admin.orders') }}" class="btn btn-outline-primary">จัดการคำสั่งซื้อ</a>
+  <a href="{{ url_for('admin.pending_artworks') }}" class="btn btn-outline-primary">อนุมัติผลงาน</a>
+  <a href="{{ url_for('admin.categories') }}" class="btn btn-outline-primary">จัดการหมวดหมู่</a>
+  {% if current_user.is_admin %}
+  <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary">จัดการผู้ใช้</a>
+  <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-secondary">Audit Log</a>
+  {% endif %}
+</div>
+{% endblock %}

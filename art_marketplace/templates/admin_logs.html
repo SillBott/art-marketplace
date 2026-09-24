@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Audit Log{% endblock %}
+{% block content %}
+<h3 class="mb-4">Audit Log (ประวัติการแก้ไขข้อมูลสำคัญ)</h3>
+<table class="table table-sm">
+  <thead><tr><th>เวลา</th><th>ผู้ใช้</th><th>การกระทำ</th><th>ตาราง</th><th>รหัส</th><th>รายละเอียด</th></tr></thead>
+  <tbody>
+    {% for log in pagination.items %}
+    <tr>
+      <td>{{ log.timestamp.strftime("%d/%m/%Y %H:%M:%S") }}</td>
+      <td>{{ log.user.username if log.user else "-" }}</td>
+      <td>{{ log.action }}</td>
+      <td>{{ log.table_name }}</td>
+      <td>{{ log.record_id }}</td>
+      <td>{{ log.details }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-muted">ไม่มีข้อมูล</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if pagination.pages > 1 %}
+<nav>
+  <ul class="pagination">
+    {% for p in range(1, pagination.pages + 1) %}
+    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.logs', page=p) }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}
