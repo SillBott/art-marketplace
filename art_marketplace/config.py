@@ -20,6 +20,13 @@ class Config:
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
             "postgres://", "postgresql://", 1
         )
+    # Force the psycopg v3 driver explicitly — psycopg2's prebuilt wheel
+    # isn't ABI-compatible with newer Python builds, so leaving driver
+    # selection to SQLAlchemy's default is unreliable.
+    if SQLALCHEMY_DATABASE_URI.startswith("postgresql://"):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace(
+            "postgresql://", "postgresql+psycopg://", 1
+        )
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
