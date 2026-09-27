@@ -54,7 +54,36 @@ class ArtistProfileForm(FlaskForm):
     display_name = StringField("ชื่อที่แสดง", validators=[DataRequired(), Length(max=120)])
     school = StringField("สถาบันการศึกษา", validators=[Optional(), Length(max=150)])
     bio = TextAreaField("แนะนำตัว", validators=[Optional()])
+    promptpay_id = StringField(
+        "หมายเลข PromptPay ของฉัน (เบอร์โทรหรือเลขบัตรประชาชน)",
+        validators=[Optional(), Length(max=50)],
+    )
+    promptpay_name = StringField(
+        "ชื่อบัญชีที่แสดงให้ลูกค้าเห็น",
+        validators=[Optional(), Length(max=120)],
+    )
+    qr_image = FileField(
+        "รูป QR Code ของฉัน (ถ้ามี)",
+        validators=[FileAllowed(["png", "jpg", "jpeg", "webp"], "รองรับเฉพาะไฟล์รูปภาพ")],
+    )
     submit = SubmitField("บันทึกโปรไฟล์")
+
+
+class AccountForm(FlaskForm):
+    """Generic account-info edit, available to every logged-in user."""
+    username = StringField("ชื่อผู้ใช้", validators=[DataRequired(), Length(3, 80)])
+    email = StringField("อีเมล", validators=[DataRequired(), Email(), Length(max=120)])
+    submit = SubmitField("บันทึก")
+
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField("รหัสผ่านปัจจุบัน", validators=[DataRequired()])
+    new_password = PasswordField("รหัสผ่านใหม่", validators=[DataRequired(), Length(min=6)])
+    confirm = PasswordField(
+        "ยืนยันรหัสผ่านใหม่",
+        validators=[DataRequired(), EqualTo("new_password", message="รหัสผ่านไม่ตรงกัน")],
+    )
+    submit = SubmitField("เปลี่ยนรหัสผ่าน")
 
 
 class CheckoutForm(FlaskForm):
