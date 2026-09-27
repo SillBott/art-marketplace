@@ -39,6 +39,7 @@ class Config:
 
     ARTWORK_UPLOAD_SUBDIR = "artworks"
     SLIP_UPLOAD_SUBDIR = "slips"
+    SETTINGS_UPLOAD_SUBDIR = "settings"
     MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # 8 MB per request
     ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "webp"}
 

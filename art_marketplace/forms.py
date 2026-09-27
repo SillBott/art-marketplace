@@ -79,3 +79,18 @@ class OrderStatusForm(FlaskForm):
         ],
     )
     submit = SubmitField("อัปเดตสถานะ")
+
+class SiteSettingsForm(FlaskForm):
+    promptpay_id = StringField(
+        "หมายเลข PromptPay (เบอร์โทรหรือเลขบัตรประชาชน)",
+        validators=[Optional(), Length(max=50)],
+    )
+    promptpay_name = StringField(
+        "ชื่อบัญชีที่แสดงให้ลูกค้าเห็น",
+        validators=[Optional(), Length(max=120)],
+    )
+    qr_image = FileField(
+        "รูป QR Code (ถ้ามี)",
+        validators=[FileAllowed(["png", "jpg", "jpeg", "webp"], "รองรับเฉพาะไฟล์รูปภาพ")],
+    )
+    submit = SubmitField("บันทึกการตั้งค่า")

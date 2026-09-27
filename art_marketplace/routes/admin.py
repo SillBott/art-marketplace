@@ -3,10 +3,10 @@ from flask_login import login_required, current_user
 from sqlalchemy import func
 
 from extensions import db
-from models import Artwork, Order, OrderItem, Category, AuditLog, User, ArtistProfile
-from forms import CategoryForm, OrderStatusForm
+from models import Artwork, Order, OrderItem, Category, AuditLog, User, ArtistProfile, SiteSettings
+from forms import CategoryForm, OrderStatusForm, SiteSettingsForm
 from decorators import role_required
-from utils import upload_url
+from utils import upload_url, save_upload
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -14,6 +14,10 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 @bp.app_template_filter("slip_url")
 def slip_url_filter(filename):
     return upload_url(current_app.config["SLIP_UPLOAD_SUBDIR"], filename)
+
+@bp.app_template_filter("settings_qr_url")
+def settings_qr_url_filter(filename):
+    return upload_url(current_app.config["SETTINGS_UPLOAD_SUBDIR"], filename)
 
 
 @bp.route("/dashboard")
@@ -224,3 +228,25 @@ def logs():
         page=page, per_page=30, error_out=False
     )
     return render_template("admin_logs.html", pagination=pagination)
+
+# ----------------------------------------------------- Site settings ------
+
+@bp.route("/settings", methods=["GET", "POST"])
+@login_required
+@role_required("admin")
+def settings():
+    site_settings = SiteSettings.get()
+    form = SiteSettingsForm(obj=site_settings)
+
+    if form.validate_on_submit():
+        site_settings.promptpay_id = form.promptpay_id.data
+        site_settings.promptpay_name = form.promptpay_name.data
+        if form.qr_image.data:
+            filename = save_upload(form.qr_image.data, current_app.config["SETTINGS_UPLOAD_SUBDIR"])
+            site_settings.qr_filename = filename
+        AuditLog.record(current_user.id, "update", "site_settings", site_settings.id, "updated payment settings")
+        db.session.commit()
+        flash("บันทึกการตั้งค่าแล้ว", "success")
+        return redirect(url_for("admin.settings"))
+
+    return render_template("admin_settings.html", form=form, site_settings=site_settings)
