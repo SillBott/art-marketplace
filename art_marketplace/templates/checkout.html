@@ -17,7 +17,17 @@
     </ul>
     <div class="alert alert-info">
       โอนเงินผ่าน PromptPay QR แล้วแนบสลิปด้านขวาเพื่อยืนยันคำสั่งซื้อ
-      <br><strong>PromptPay:</strong> 099-999-9999 (ตัวอย่าง)
+      {% if site_settings.qr_filename %}
+      <div class="text-center my-2">
+        <img src="{{ site_settings.qr_filename | settings_qr_url }}" width="200" class="rounded border bg-white p-2">
+      </div>
+      {% endif %}
+      {% if site_settings.promptpay_id %}
+      <br><strong>PromptPay:</strong> {{ site_settings.promptpay_id }}
+      {% if site_settings.promptpay_name %} ({{ site_settings.promptpay_name }}){% endif %}
+      {% else %}
+      <br><span class="text-muted">ยังไม่ได้ตั้งค่าข้อมูลรับเงิน — ติดต่อแอดมิน</span>
+      {% endif %}
     </div>
   </div>
   <div class="col-md-6">
