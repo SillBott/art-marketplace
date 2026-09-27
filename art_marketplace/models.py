@@ -60,6 +60,12 @@ class ArtistProfile(db.Model):
     school = db.Column(db.String(150))
     bio = db.Column(db.Text)
     commission_rate = db.Column(db.Float, default=0.80)  # artist's share, 0-1
+
+    # Each artist's own payment details, shown at checkout for their artworks
+    promptpay_id = db.Column(db.String(50))
+    promptpay_name = db.Column(db.String(120))
+    qr_filename = db.Column(db.String(255))
+
     created_at = db.Column(db.DateTime, default=now)
 
     user = db.relationship("User", back_populates="artist_profile")
