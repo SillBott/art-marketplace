@@ -23,8 +23,23 @@ def checkout():
 
     total = sum(a.price for a in items)
     form = CheckoutForm()
-    site_settings = SiteSettings.get()
 
+    artist = items[0].artist
+    if artist.promptpay_id or artist.qr_filename:
+        payment_info = {
+            "label": f"{artist.display_name} (ศิลปิน)",
+            "promptpay_id": artist.promptpay_id,
+            "promptpay_name": artist.promptpay_name or artist.display_name,
+            "qr_filename": artist.qr_filename,
+        }
+    else:
+        site_settings = SiteSettings.get()
+        payment_info = {
+            "label": "ร้านค้า (ยังไม่ได้ตั้งค่าบัญชีศิลปิน)",
+            "promptpay_id": site_settings.promptpay_id,
+            "promptpay_name": site_settings.promptpay_name,
+            "qr_filename": site_settings.qr_filename,
+        }
     if form.validate_on_submit():
         # Re-check availability at the last moment to avoid double-selling
         still_available = [a for a in items if a.status == "available"]
@@ -49,7 +64,7 @@ def checkout():
         flash("ส่งคำสั่งซื้อแล้ว รอแอดมินตรวจสอบสลิป", "success")
         return redirect(url_for("orders.detail", order_id=order.id))
 
-    return render_template("checkout.html", form=form, items=items, total=total, site_settings=site_settings)
+    return render_template("checkout.html", form=form, items=items, total=total, payment_info=payment_info)
 
 
 @bp.route("/")
