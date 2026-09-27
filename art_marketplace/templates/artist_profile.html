@@ -6,11 +6,27 @@
   <div class="col-md-6">
     <h3 class="mb-4">โปรไฟล์ศิลปิน</h3>
     <p class="text-muted">ส่วนแบ่งรายได้ปัจจุบัน: {{ (profile.commission_rate * 100) | round(0) }}% ของยอดขาย</p>
-    <form method="post" novalidate>
+    <form method="post" enctype="multipart/form-data" novalidate>
       {{ form.hidden_tag() }}
       {{ render_field(form.display_name) }}
       {{ render_field(form.school) }}
       {{ render_field(form.bio) }}
+
+      <hr>
+      <h6>ข้อมูลรับเงิน (PromptPay ของฉันเอง)</h6>
+      <p class="text-muted small">
+        เมื่อลูกค้าซื้อผลงานของคุณ หน้าชำระเงินจะแสดง QR/เลข PromptPay นี้ให้ลูกค้าโอนตรงถึงคุณ
+      </p>
+      {{ render_field(form.promptpay_id) }}
+      {{ render_field(form.promptpay_name) }}
+      {% if profile.qr_filename %}
+      <div class="mb-3">
+        <label class="form-label d-block">QR ปัจจุบัน</label>
+        <img src="{{ profile.qr_filename | settings_qr_url }}" width="150" class="rounded border">
+      </div>
+      {% endif %}
+      {{ render_field(form.qr_image) }}
+
       {{ render_field(form.submit) }}
     </form>
   </div>
