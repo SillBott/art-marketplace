@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block title %}บัญชีของฉัน{% endblock %}
+{% block content %}
+<div class="row justify-content-center g-4">
+  <div class="col-md-6">
+    <h3 class="mb-4">ข้อมูลบัญชี</h3>
+    <form method="post" novalidate>
+      {{ account_form.hidden_tag() }}
+      {{ render_field(account_form.username) }}
+      {{ render_field(account_form.email) }}
+      {{ render_field(account_form.submit) }}
+    </form>
+  </div>
+  <div class="col-md-6">
+    <h3 class="mb-4">เปลี่ยนรหัสผ่าน</h3>
+    <form method="post" novalidate>
+      {{ password_form.hidden_tag() }}
+      {{ render_field(password_form.current_password) }}
+      {{ render_field(password_form.new_password) }}
+      {{ render_field(password_form.confirm) }}
+      {{ render_field(password_form.submit) }}
+    </form>
+  </div>
+</div>
+
+{% if current_user.artist_profile %}
+<hr class="my-4">
+<p class="text-muted">
+  ต้องการแก้ไขข้อมูลศิลปิน (ชื่อที่แสดง, PromptPay, QR) ไปที่
+  <a href="{{ url_for('artist.profile') }}">โปรไฟล์ศิลปิน</a>
+</p>
+{% endif %}
+{% endblock %}
