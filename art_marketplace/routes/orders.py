@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, current_
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import Order, OrderItem, Artwork, AuditLog
+from models import Order, OrderItem, Artwork, AuditLog, SiteSettings
 from forms import CheckoutForm
 from utils import save_upload
 from routes.cart import CART_KEY
@@ -23,6 +23,7 @@ def checkout():
 
     total = sum(a.price for a in items)
     form = CheckoutForm()
+    site_settings = SiteSettings.get()
 
     if form.validate_on_submit():
         # Re-check availability at the last moment to avoid double-selling
@@ -48,7 +49,7 @@ def checkout():
         flash("ส่งคำสั่งซื้อแล้ว รอแอดมินตรวจสอบสลิป", "success")
         return redirect(url_for("orders.detail", order_id=order.id))
 
-    return render_template("checkout.html", form=form, items=items, total=total)
+    return render_template("checkout.html", form=form, items=items, total=total, site_settings=site_settings)
 
 
 @bp.route("/")
