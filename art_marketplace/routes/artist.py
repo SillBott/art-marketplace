@@ -17,7 +17,14 @@ def profile():
     profile = current_user.artist_profile
     form = ArtistProfileForm(obj=profile)
     if form.validate_on_submit():
-        form.populate_obj(profile)
+        profile.display_name = form.display_name.data
+        profile.school = form.school.data
+        profile.bio = form.bio.data
+        profile.promptpay_id = form.promptpay_id.data
+        profile.promptpay_name = form.promptpay_name.data
+        if form.qr_image.data:
+            filename = save_upload(form.qr_image.data, current_app.config["SETTINGS_UPLOAD_SUBDIR"])
+            profile.qr_filename = filename
         AuditLog.record(current_user.id, "update", "artist_profiles", profile.id)
         db.session.commit()
         flash("บันทึกโปรไฟล์แล้ว", "success")
