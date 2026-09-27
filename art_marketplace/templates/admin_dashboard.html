@@ -74,6 +74,7 @@
   <a href="{{ url_for('admin.pending_artworks') }}" class="btn btn-outline-primary">อนุมัติผลงาน</a>
   <a href="{{ url_for('admin.categories') }}" class="btn btn-outline-primary">จัดการหมวดหมู่</a>
   {% if current_user.is_admin %}
+  <a href="{{ url_for('admin.settings') }}" class="btn btn-outline-primary">ตั้งค่าการรับเงิน</a>
   <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary">จัดการผู้ใช้</a>
   <a href="{{ url_for('admin.logs') }}" class="btn btn-outline-secondary">Audit Log</a>
   {% endif %}
