@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block title %}ตั้งค่าการรับเงิน{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h3 class="mb-4">ตั้งค่าการรับเงิน (PromptPay)</h3>
+    <p class="text-muted small">
+      ข้อมูลนี้จะแสดงให้ลูกค้าเห็นในหน้าชำระเงินทุกคำสั่งซื้อ
+      (บัญชีของร้าน ไม่ใช่บัญชีของศิลปินแต่ละคน)
+    </p>
+    <form method="post" enctype="multipart/form-data" novalidate>
+      {{ form.hidden_tag() }}
+      {{ render_field(form.promptpay_id) }}
+      {{ render_field(form.promptpay_name) }}
+      {% if site_settings.qr_filename %}
+      <div class="mb-3">
+        <label class="form-label d-block">QR ปัจจุบัน</label>
+        <img src="{{ site_settings.qr_filename | settings_qr_url }}" width="180" class="rounded border">
+      </div>
+      {% endif %}
+      {{ render_field(form.qr_image) }}
+      {{ render_field(form.submit) }}
+    </form>
+  </div>
+</div>
+{% endblock %}
