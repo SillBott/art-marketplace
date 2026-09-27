@@ -15,7 +15,6 @@ def _get_cart_ids():
 def view():
     ids = _get_cart_ids()
     artworks = Artwork.query.filter(Artwork.id.in_(ids)).all() if ids else []
-    # Preserve cart order, drop anything sold since it was added
     by_id = {a.id: a for a in artworks}
     items = [by_id[i] for i in ids if i in by_id and by_id[i].status == "available"]
     total = sum(a.price for a in items)
@@ -30,6 +29,17 @@ def add(artwork_id):
         return redirect(url_for("gallery.detail", artwork_id=artwork_id))
 
     ids = _get_cart_ids()
+
+    if ids:
+        existing = Artwork.query.filter(Artwork.id.in_(ids)).first()
+        if existing and existing.artist_id != artwork.artist_id:
+            flash(
+                "ตะกร้ามีผลงานของศิลปินคนอื่นอยู่ กรุณาชำระเงินหรือล้างตะกร้าก่อน "
+                "จึงจะเพิ่มผลงานของศิลปินคนใหม่ได้ (แต่ละคำสั่งซื้อจ่ายให้ศิลปินคนเดียวเท่านั้น)",
+                "warning",
+            )
+            return redirect(url_for("cart.view"))
+
     if artwork_id not in ids:
         ids.append(artwork_id)
         session[CART_KEY] = ids
@@ -45,4 +55,11 @@ def remove(artwork_id):
     if artwork_id in ids:
         ids.remove(artwork_id)
         session[CART_KEY] = ids
+    return redirect(url_for("cart.view"))
+
+
+@bp.route("/clear", methods=["POST"])
+def clear():
+    session[CART_KEY] = []
+    flash("ล้างตะกร้าแล้ว", "info")
     return redirect(url_for("cart.view"))
