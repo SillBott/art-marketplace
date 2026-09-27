@@ -70,3 +70,37 @@ def logout():
     logout_user()
     flash("ออกจากระบบแล้ว", "info")
     return redirect(url_for("gallery.index"))
+
+@bp.route("/account", methods=["GET", "POST"])
+@login_required
+def account():
+    account_form = AccountForm(obj=current_user, prefix="account")
+    password_form = ChangePasswordForm(prefix="password")
+
+    if account_form.validate_on_submit():
+        conflict = User.query.filter(
+            User.id != current_user.id,
+            (User.username == account_form.username.data)
+            | (User.email == account_form.email.data),
+        ).first()
+        if conflict:
+            flash("มีชื่อผู้ใช้หรืออีเมลนี้ถูกใช้แล้ว", "danger")
+        else:
+            current_user.username = account_form.username.data
+            current_user.email = account_form.email.data
+            AuditLog.record(current_user.id, "update", "users", current_user.id, "updated account info")
+            db.session.commit()
+            flash("บันทึกข้อมูลบัญชีแล้ว", "success")
+        return redirect(url_for("auth.account"))
+
+    if password_form.validate_on_submit():
+        if not current_user.check_password(password_form.current_password.data):
+            flash("รหัสผ่านปัจจุบันไม่ถูกต้อง", "danger")
+        else:
+            current_user.set_password(password_form.new_password.data)
+            AuditLog.record(current_user.id, "update", "users", current_user.id, "changed password")
+            db.session.commit()
+            flash("เปลี่ยนรหัสผ่านแล้ว", "success")
+        return redirect(url_for("auth.account"))
+
+    return render_template("account.html", account_form=account_form, password_form=password_form)
