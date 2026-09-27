@@ -15,6 +15,10 @@ bp = Blueprint("admin", __name__, url_prefix="/admin")
 def slip_url_filter(filename):
     return upload_url(current_app.config["SLIP_UPLOAD_SUBDIR"], filename)
 
+@bp.app_template_filter("settings_qr_url")
+def settings_qr_url_filter(filename):
+    return upload_url(current_app.config["SETTINGS_UPLOAD_SUBDIR"], filename)
+
 
 @bp.route("/dashboard")
 @login_required
