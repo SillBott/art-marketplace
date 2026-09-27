@@ -176,3 +176,26 @@ class AuditLog(db.Model):
         )
         db.session.add(log)
         return log
+
+# ------------------------------------------------------- Site settings ----
+
+class SiteSettings(db.Model):
+    """Single-row table holding the marketplace's own payment details
+    (shown to customers at checkout) — not tied to any one user."""
+    __tablename__ = "site_settings"
+
+    id = db.Column(db.Integer, primary_key=True)
+    promptpay_id = db.Column(db.String(50))       # phone/ID for PromptPay
+    promptpay_name = db.Column(db.String(120))     # account holder name shown to buyers
+    qr_filename = db.Column(db.String(255))        # uploaded QR code image
+    updated_at = db.Column(db.DateTime, default=now, onupdate=now)
+
+    @staticmethod
+    def get():
+        """Fetch the single settings row, creating an empty one if needed."""
+        settings = SiteSettings.query.first()
+        if settings is None:
+            settings = SiteSettings()
+            db.session.add(settings)
+            db.session.commit()
+        return settings
