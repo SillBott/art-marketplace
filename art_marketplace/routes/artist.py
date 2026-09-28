@@ -5,7 +5,7 @@ from extensions import db
 from models import Artwork, Category, AuditLog
 from forms import ArtworkForm, ArtistProfileForm
 from decorators import artist_required
-from utils import save_upload, make_watermarked_preview
+from utils import save_upload, save_artwork_image
 
 bp = Blueprint("artist", __name__, url_prefix="/artist")
 
@@ -68,9 +68,7 @@ def new_artwork():
         )
         if form.image.data:
             subdir = current_app.config["ARTWORK_UPLOAD_SUBDIR"]
-            filename = save_upload(form.image.data, subdir)
-            artwork.image_filename = filename
-            artwork.preview_filename = make_watermarked_preview(filename, subdir)
+            artwork.image_filename, artwork.preview_filename = save_artwork_image(form.image.data, subdir)
 
         db.session.add(artwork)
         db.session.flush()
@@ -103,9 +101,7 @@ def edit_artwork(artwork_id):
 
         if form.image.data:
             subdir = current_app.config["ARTWORK_UPLOAD_SUBDIR"]
-            filename = save_upload(form.image.data, subdir)
-            artwork.image_filename = filename
-            artwork.preview_filename = make_watermarked_preview(filename, subdir)
+            artwork.image_filename, artwork.preview_filename = save_artwork_image(form.image.data, subdir)
 
         AuditLog.record(current_user.id, "update", "artworks", artwork.id, artwork.title)
         db.session.commit()
