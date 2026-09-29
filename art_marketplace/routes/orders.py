@@ -1,5 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, current_app, session, abort
+import os
+from flask import Blueprint, render_template, redirect, url_for, flash, current_app, session, abort, send_from_directory
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 
 from extensions import db
 from models import Order, OrderItem, Artwork, AuditLog, SiteSettings
@@ -8,6 +10,10 @@ from utils import save_upload
 from routes.cart import CART_KEY
 
 bp = Blueprint("orders", __name__, url_prefix="/orders")
+
+# Order statuses that mean payment has been confirmed — a buyer's purchase
+# unlocks the full-resolution download from this point on.
+UNLOCKED_STATUSES = ("paid", "shipped", "completed")
 
 
 @bp.route("/checkout", methods=["GET", "POST"])
