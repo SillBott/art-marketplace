@@ -123,3 +123,14 @@ class SiteSettingsForm(FlaskForm):
         validators=[FileAllowed(["png", "jpg", "jpeg", "webp"], "รองรับเฉพาะไฟล์รูปภาพ")],
     )
     submit = SubmitField("บันทึกการตั้งค่า")
+
+
+class ReviewForm(FlaskForm):
+    rating = SelectField(
+        "ให้คะแนน",
+        coerce=int,
+        choices=[(5, "★★★★★ (5)"), (4, "★★★★ (4)"), (3, "★★★ (3)"), (2, "★★ (2)"), (1, "★ (1)")],
+        validators=[DataRequired()],
+    )
+    comment = TextAreaField("ความคิดเห็น", validators=[Optional(), Length(max=1000)])
+    submit = SubmitField("บันทึกรีวิว")
