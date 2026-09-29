@@ -1,7 +1,10 @@
-from flask import Blueprint, render_template, request, current_app
-from sqlalchemy import or_
+from flask import Blueprint, render_template, request, current_app, redirect, url_for, flash
+from flask_login import login_required, current_user
+from sqlalchemy import or_, func
 
-from models import Artwork, Category, ArtistProfile
+from extensions import db
+from models import Artwork, Category, ArtistProfile, Review, Like, Follow
+from forms import ReviewForm
 from utils import upload_url
 
 bp = Blueprint("gallery", __name__)
@@ -76,4 +79,120 @@ def detail(artwork_id):
         .limit(4)
         .all()
     )
-    return render_template("artwork_detail.html", artwork=artwork, related=related)
+
+    like_count = Like.query.filter_by(artwork_id=artwork.id).count()
+    user_has_liked = (
+        current_user.is_authenticated
+        and Like.query.filter_by(artwork_id=artwork.id, user_id=current_user.id).first() is not None
+    )
+
+    reviews = (
+        Review.query.filter_by(artwork_id=artwork.id)
+        .order_by(Review.created_at.desc())
+        .all()
+    )
+    avg_rating = db.session.query(func.avg(Review.rating)).filter(
+        Review.artwork_id == artwork.id
+    ).scalar()
+
+    review_form = ReviewForm()
+    user_review = None
+    if current_user.is_authenticated:
+        user_review = Review.query.filter_by(
+            artwork_id=artwork.id, user_id=current_user.id
+        ).first()
+        if user_review and request.method == "GET":
+            review_form.rating.data = user_review.rating
+            review_form.comment.data = user_review.comment
+
+    is_following = (
+        current_user.is_authenticated
+        and Follow.query.filter_by(
+            follower_id=current_user.id, artist_id=artwork.artist_id
+        ).first() is not None
+    )
+
+    return render_template(
+        "artwork_detail.html", artwork=artwork, related=related,
+        like_count=like_count, user_has_liked=user_has_liked,
+        reviews=reviews, avg_rating=avg_rating,
+        review_form=review_form, user_review=user_review,
+        is_following=is_following,
+    )
+
+
+@bp.route("/artwork/<int:artwork_id>/like", methods=["POST"])
+@login_required
+def like(artwork_id):
+    artwork = Artwork.query.get_or_404(artwork_id)
+    existing = Like.query.filter_by(artwork_id=artwork.id, user_id=current_user.id).first()
+    if existing:
+        db.session.delete(existing)
+    else:
+        db.session.add(Like(artwork_id=artwork.id, user_id=current_user.id))
+    db.session.commit()
+    return redirect(url_for("gallery.detail", artwork_id=artwork_id))
+
+
+@bp.route("/artwork/<int:artwork_id>/review", methods=["POST"])
+@login_required
+def review(artwork_id):
+    artwork = Artwork.query.get_or_404(artwork_id)
+    form = ReviewForm()
+    if form.validate_on_submit():
+        existing = Review.query.filter_by(
+            artwork_id=artwork.id, user_id=current_user.id
+        ).first()
+        if existing:
+            existing.rating = form.rating.data
+            existing.comment = form.comment.data
+        else:
+            db.session.add(Review(
+                artwork_id=artwork.id, user_id=current_user.id,
+                rating=form.rating.data, comment=form.comment.data,
+            ))
+        db.session.commit()
+        flash("บันทึกรีวิวแล้ว", "success")
+    else:
+        flash("กรุณาให้คะแนน 1-5 ดาว", "danger")
+    return redirect(url_for("gallery.detail", artwork_id=artwork_id))
+
+
+@bp.route("/artist/<int:artist_id>")
+def artist_public_profile(artist_id):
+    artist = ArtistProfile.query.get_or_404(artist_id)
+    artworks = (
+        Artwork.query.filter_by(artist_id=artist.id, approved=True)
+        .order_by(Artwork.created_at.desc())
+        .all()
+    )
+    follower_count = Follow.query.filter_by(artist_id=artist.id).count()
+    is_following = (
+        current_user.is_authenticated
+        and Follow.query.filter_by(
+            follower_id=current_user.id, artist_id=artist.id
+        ).first() is not None
+    )
+    return render_template(
+        "public_artist_profile.html", artist=artist, artworks=artworks,
+        follower_count=follower_count, is_following=is_following,
+    )
+
+
+@bp.route("/artist/<int:artist_id>/follow", methods=["POST"])
+@login_required
+def follow_artist(artist_id):
+    artist = ArtistProfile.query.get_or_404(artist_id)
+    if artist.user_id == current_user.id:
+        flash("ไม่สามารถติดตามตัวเองได้", "warning")
+        return redirect(url_for("gallery.artist_public_profile", artist_id=artist_id))
+
+    existing = Follow.query.filter_by(
+        follower_id=current_user.id, artist_id=artist.id
+    ).first()
+    if existing:
+        db.session.delete(existing)
+    else:
+        db.session.add(Follow(follower_id=current_user.id, artist_id=artist.id))
+    db.session.commit()
+    return redirect(url_for("gallery.artist_public_profile", artist_id=artist_id))
