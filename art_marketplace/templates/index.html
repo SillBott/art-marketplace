@@ -3,7 +3,7 @@
 {% block content %}
 
 <form class="row g-2 mb-4" method="get">
-  <div class="col-md-5">
+  <div class="col-md-4">
     <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="ค้นหาชื่อผลงาน...">
   </div>
   <div class="col-md-3">
@@ -15,6 +15,14 @@
     </select>
   </div>
   <div class="col-md-3">
+    <select name="artist" class="form-select">
+      <option value="">ทุกศิลปิน</option>
+      {% for a in artists %}
+      <option value="{{ a.id }}" {% if artist_id == a.id %}selected{% endif %}>{{ a.display_name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
     <select name="sort" class="form-select">
       <option value="newest" {% if sort == 'newest' %}selected{% endif %}>ใหม่ล่าสุด</option>
       <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>เก่าสุด</option>
@@ -22,8 +30,17 @@
       <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>ราคาสูง-ต่ำ</option>
     </select>
   </div>
-  <div class="col-md-1">
+  <div class="col-md-2">
+    <input type="number" min="0" step="any" name="min_price" value="{{ min_price if min_price is not none else '' }}" class="form-control" placeholder="ราคาต่ำสุด">
+  </div>
+  <div class="col-md-2">
+    <input type="number" min="0" step="any" name="max_price" value="{{ max_price if max_price is not none else '' }}" class="form-control" placeholder="ราคาสูงสุด">
+  </div>
+  <div class="col-md-2">
     <button class="btn btn-primary w-100">ค้นหา</button>
+  </div>
+  <div class="col-md-2">
+    <a href="{{ url_for('gallery.index') }}" class="btn btn-outline-secondary w-100">ล้างตัวกรอง</a>
   </div>
 </form>
 
@@ -57,7 +74,7 @@
   <ul class="pagination justify-content-center">
     {% for p in range(1, pagination.pages + 1) %}
     <li class="page-item {% if p == pagination.page %}active{% endif %}">
-      <a class="page-link" href="{{ url_for('gallery.index', page=p, q=q, category=category_id, sort=sort) }}">{{ p }}</a>
+      <a class="page-link" href="{{ url_for('gallery.index', page=p, q=q, category=category_id, artist=artist_id, min_price=min_price, max_price=max_price, sort=sort) }}">{{ p }}</a>
     </li>
     {% endfor %}
   </ul>
