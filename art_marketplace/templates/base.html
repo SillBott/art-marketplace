@@ -22,6 +22,7 @@
           {% endif %}
           {% if current_user.is_authenticated %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('orders.my_orders') }}">คำสั่งซื้อของฉัน</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('orders.collection') }}">คอลเล็คชั่นของฉัน</a></li>
           {% endif %}
           {% if current_user.is_authenticated and current_user.is_staff %}
           <li class="nav-item"><a class="nav-link" href="{{ url_for('admin.dashboard') }}">แผงควบคุมแอดมิน</a></li>
