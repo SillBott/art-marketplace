@@ -205,3 +205,50 @@ class SiteSettings(db.Model):
             db.session.add(settings)
             db.session.commit()
         return settings
+
+
+# ---------------------------------------------------- Reviews / likes / follows
+
+class Review(db.Model):
+    __tablename__ = "reviews"
+
+    id = db.Column(db.Integer, primary_key=True)
+    artwork_id = db.Column(db.Integer, db.ForeignKey("artworks.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1-5
+    comment = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=now)
+    updated_at = db.Column(db.DateTime, default=now, onupdate=now)
+
+    artwork = db.relationship("Artwork", backref="reviews")
+    user = db.relationship("User")
+
+    __table_args__ = (db.UniqueConstraint("artwork_id", "user_id", name="uq_review_artwork_user"),)
+
+
+class Like(db.Model):
+    __tablename__ = "likes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    artwork_id = db.Column(db.Integer, db.ForeignKey("artworks.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=now)
+
+    artwork = db.relationship("Artwork", backref="likes")
+    user = db.relationship("User")
+
+    __table_args__ = (db.UniqueConstraint("artwork_id", "user_id", name="uq_like_artwork_user"),)
+
+
+class Follow(db.Model):
+    __tablename__ = "follows"
+
+    id = db.Column(db.Integer, primary_key=True)
+    follower_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    artist_id = db.Column(db.Integer, db.ForeignKey("artist_profiles.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=now)
+
+    follower = db.relationship("User")
+    artist = db.relationship("ArtistProfile", backref="followers")
+
+    __table_args__ = (db.UniqueConstraint("follower_id", "artist_id", name="uq_follow_follower_artist"),)
