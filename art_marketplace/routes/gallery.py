@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, current_app
 from sqlalchemy import or_
 
-from models import Artwork, Category
+from models import Artwork, Category, ArtistProfile
 from utils import upload_url
 
 bp = Blueprint("gallery", __name__)
@@ -16,6 +16,9 @@ def art_url_filter(filename):
 def index():
     q = request.args.get("q", "").strip()
     category_id = request.args.get("category", type=int)
+    artist_id = request.args.get("artist", type=int)
+    min_price = request.args.get("min_price", type=float)
+    max_price = request.args.get("max_price", type=float)
     sort = request.args.get("sort", "newest")
     page = request.args.get("page", 1, type=int)
 
@@ -28,6 +31,12 @@ def index():
         )
     if category_id:
         query = query.filter_by(category_id=category_id)
+    if artist_id:
+        query = query.filter_by(artist_id=artist_id)
+    if min_price is not None:
+        query = query.filter(Artwork.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Artwork.price <= max_price)
 
     if sort == "price_asc":
         query = query.order_by(Artwork.price.asc())
@@ -43,13 +52,15 @@ def index():
     )
 
     categories = Category.query.order_by(Category.name).all()
+    artists = ArtistProfile.query.order_by(ArtistProfile.display_name).all()
 
     return render_template(
         "index.html",
         artworks=pagination.items,
         pagination=pagination,
-        categories=categories,
-        q=q, category_id=category_id, sort=sort,
+        categories=categories, artists=artists,
+        q=q, category_id=category_id, artist_id=artist_id,
+        min_price=min_price, max_price=max_price, sort=sort,
     )
 
 
