@@ -91,3 +91,57 @@ def detail(order_id):
     if order.customer_id != current_user.id and not current_user.is_staff:
         abort(403)
     return render_template("order_detail.html", order=order)
+
+################# Collection #########################
+@bp.route("/collection")
+@login_required
+def collection():
+    """Every artwork the current user has successfully bought (payment
+    confirmed), deduplicated, newest purchase first — with a download link."""
+    items = (
+        OrderItem.query.join(Order)
+        .filter(
+            Order.customer_id == current_user.id,
+            Order.status.in_(UNLOCKED_STATUSES),
+        )
+        .order_by(Order.created_at.desc())
+        .all()
+    )
+    seen = {}
+    for item in items:
+        seen.setdefault(item.artwork_id, item)
+    return render_template("my_collection.html", items=list(seen.values()))
+
+
+@bp.route("/artwork/<int:artwork_id>/download")
+@login_required
+def download_artwork(artwork_id):
+    """Serve the original (non-watermarked) file — only to a buyer who
+    actually owns a paid/shipped/completed order containing it."""
+    owns_it = (
+        OrderItem.query.join(Order)
+        .filter(
+            OrderItem.artwork_id == artwork_id,
+            Order.customer_id == current_user.id,
+            Order.status.in_(UNLOCKED_STATUSES),
+        )
+        .first()
+    )
+    if not owns_it:
+        abort(403)
+
+    artwork = Artwork.query.get_or_404(artwork_id)
+    filename = artwork.image_filename
+    if not filename:
+        abort(404)
+
+    # Cloudinary-stored files are already full URLs — just send the buyer there.
+    if filename.startswith("http://") or filename.startswith("https://"):
+        return redirect(filename)
+
+    ext = filename.rsplit(".", 1)[-1]
+    download_name = f"{secure_filename(artwork.title) or 'artwork'}.{ext}"
+    folder = os.path.join(
+        current_app.config["UPLOAD_FOLDER"], current_app.config["ARTWORK_UPLOAD_SUBDIR"]
+    )
+    return send_from_directory(folder, filename, as_attachment=True, download_name=download_name)
