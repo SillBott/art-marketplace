@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}คอลเล็คชั่นของฉัน{% endblock %}
+{% block content %}
+<h3 class="mb-4">คอลเล็คชั่นของฉัน</h3>
+<p class="text-muted small">ผลงานที่คุณซื้อและชำระเงินได้รับการยืนยันแล้ว โหลดไฟล์ต้นฉบับ (ไม่มีลายน้ำ) ได้ที่นี่</p>
+
+{% if items %}
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+  {% for item in items %}
+  {% set art = item.artwork %}
+  <div class="col">
+    <div class="card art-card h-100">
+      {% if art.preview_filename %}
+      <img src="{{ art.preview_filename | art_url }}" alt="{{ art.title }}">
+      {% else %}
+      <img src="https://placehold.co/400x300?text=No+Image" alt="no image">
+      {% endif %}
+      <div class="card-body">
+        <h6 class="card-title mb-1">{{ art.title }}</h6>
+        <p class="text-muted small mb-2">โดย {{ art.artist.display_name }}</p>
+        <a href="{{ url_for('orders.download_artwork', artwork_id=art.id) }}" class="btn btn-sm btn-primary w-100">
+          ดาวน์โหลดไฟล์ต้นฉบับ
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="text-muted">ยังไม่มีผลงานในคอลเล็คชั่น — ผลงานจะปรากฏที่นี่หลังชำระเงินได้รับการยืนยันแล้ว</p>
+<a href="{{ url_for('gallery.index') }}" class="btn btn-primary">เลือกซื้อผลงาน</a>
+{% endif %}
+{% endblock %}
