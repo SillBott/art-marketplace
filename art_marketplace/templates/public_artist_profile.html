@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ artist.display_name }} - Art Marketplace{% endblock %}
+{% block content %}
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <h2>{{ artist.display_name }}</h2>
+    {% if artist.school %}<p class="text-muted">{{ artist.school }}</p>{% endif %}
+    <p>{{ artist.bio or "ยังไม่มีคำแนะนำตัว" }}</p>
+    <p class="text-muted small">ผู้ติดตาม: {{ follower_count }} คน</p>
+  </div>
+  <div class="col-md-4 text-md-end">
+    {% if current_user.is_authenticated and current_user.id != artist.user_id %}
+    <form method="post" action="{{ url_for('gallery.follow_artist', artist_id=artist.id) }}">
+      <button class="btn {{ 'btn-secondary' if is_following else 'btn-primary' }}">
+        {{ "เลิกติดตาม" if is_following else "ติดตาม" }}
+      </button>
+    </form>
+    {% elif not current_user.is_authenticated %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-primary">เข้าสู่ระบบเพื่อติดตาม</a>
+    {% endif %}
+  </div>
+</div>
+
+<h4 class="mb-3">ผลงานของ {{ artist.display_name }}</h4>
+<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+  {% for art in artworks %}
+  <div class="col">
+    <div class="card art-card h-100 position-relative">
+      {% if art.status == 'sold' %}
+        <span class="badge bg-danger status-badge-sold">ขายแล้ว</span>
+      {% endif %}
+      {% if art.preview_filename %}
+        <img src="{{ art.preview_filename | art_url }}" alt="{{ art.title }}">
+      {% else %}
+        <img src="https://placehold.co/400x300?text=No+Image" alt="no image">
+      {% endif %}
+      <div class="card-body">
+        <h6 class="card-title mb-1">{{ art.title }}</h6>
+        <p class="fw-bold mb-2">฿{{ "%.2f"|format(art.price) }}</p>
+        <a href="{{ url_for('gallery.detail', artwork_id=art.id) }}" class="btn btn-sm btn-outline-primary w-100">ดูรายละเอียด</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">ศิลปินคนนี้ยังไม่มีผลงานที่เผยแพร่</p>
+  {% endfor %}
+</div>
+{% endblock %}
