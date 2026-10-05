@@ -62,7 +62,8 @@ def new_artwork():
             title=form.title.data,
             description=form.description.data,
             technique=form.technique.data,
-            size=form.size.data,
+            width_cm=form.width_cm.data,
+            height_cm=form.height_cm.data,
             price=form.price.data,
             approved=False,
         )
@@ -96,7 +97,8 @@ def edit_artwork(artwork_id):
         artwork.description = form.description.data
         artwork.category_id = form.category_id.data
         artwork.technique = form.technique.data
-        artwork.size = form.size.data
+        artwork.width_cm = form.width_cm.data
+        artwork.height_cm = form.height_cm.data
         artwork.price = form.price.data
 
         if form.image.data:
