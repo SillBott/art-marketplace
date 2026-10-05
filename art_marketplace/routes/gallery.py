@@ -1,3 +1,4 @@
+import math
 from flask import Blueprint, render_template, request, current_app, redirect, url_for, flash
 from flask_login import login_required, current_user
 from sqlalchemy import or_, func
@@ -17,13 +18,19 @@ def art_url_filter(filename):
 
 @bp.route("/")
 def index():
-    q = request.args.get("q", "").strip()
+    q = request.args.get("q", "").strip()[:100]          # จำกัดคำค้นหา 100 ตัวอักษร
     category_id = request.args.get("category", type=int)
     artist_id = request.args.get("artist", type=int)
     min_price = request.args.get("min_price", type=float)
     max_price = request.args.get("max_price", type=float)
     sort = request.args.get("sort", "newest")
     page = request.args.get("page", 1, type=int)
+
+    # กันค่า nan / inf / ตัวเลขใหญ่เกินจริง
+    if min_price is not None and not (math.isfinite(min_price) and 0 <= min_price <= 1_000_000):
+        min_price = None
+    if max_price is not None and not (math.isfinite(max_price) and 0 <= max_price <= 1_000_000):
+        max_price = None
 
     query = Artwork.query.filter_by(approved=True)
 
@@ -196,3 +203,4 @@ def follow_artist(artist_id):
         db.session.add(Follow(follower_id=current_user.id, artist_id=artist.id))
     db.session.commit()
     return redirect(url_for("gallery.artist_public_profile", artist_id=artist_id))
+
