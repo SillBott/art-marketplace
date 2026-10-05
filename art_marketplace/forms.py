@@ -36,7 +36,8 @@ class ArtworkForm(FlaskForm):
     description = TextAreaField("รายละเอียด", validators=[Optional()])
     category_id = SelectField("หมวดหมู่", coerce=int, validators=[DataRequired()])
     technique = StringField("เทคนิค", validators=[Optional(), Length(max=120)])
-    size = StringField("ขนาด", validators=[Optional(), Length(max=60)])
+    width_cm = FloatField("ความกว้าง (ซม.)", validators=[Optional(), NumberRange(min=0.1)])
+    height_cm = FloatField("ความสูง (ซม.)", validators=[Optional(), NumberRange(min=0.1)])
     price = FloatField("ราคา (บาท)", validators=[DataRequired(), NumberRange(min=1)])
     image = FileField(
         "รูปภาพผลงาน",
