@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, abort, c
 from flask_login import login_required, current_user
 
 from extensions import db
-from models import Artwork, Category, AuditLog
+from models import Artwork, Category, AuditLog, OrderItem, Review, Like
 from forms import ArtworkForm, ArtistProfileForm
 from decorators import artist_required
 from utils import save_upload, save_artwork_image
@@ -120,6 +120,20 @@ def delete_artwork(artwork_id):
     artwork = Artwork.query.get_or_404(artwork_id)
     if artwork.artist_id != current_user.artist_profile.id and not current_user.is_staff:
         abort(403)
+
+    # A sold artwork has real order history tied to it — deleting it would
+    # corrupt that buyer's order record, so block it instead of crashing.
+    if OrderItem.query.filter_by(artwork_id=artwork.id).first():
+        flash(
+            "ผลงานนี้มีประวัติการสั่งซื้อแล้ว ไม่สามารถลบได้ "
+            "(เพื่อรักษาความถูกต้องของประวัติการซื้อขายของลูกค้า)",
+            "danger",
+        )
+        return redirect(url_for("artist.my_artworks"))
+
+    # Safe to delete — clean up any reviews/likes left on this (unsold) artwork first
+    Review.query.filter_by(artwork_id=artwork.id).delete(synchronize_session=False)
+    Like.query.filter_by(artwork_id=artwork.id).delete(synchronize_session=False)
 
     AuditLog.record(current_user.id, "delete", "artworks", artwork.id, artwork.title)
     db.session.delete(artwork)
