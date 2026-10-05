@@ -124,6 +124,9 @@ class SiteSettingsForm(FlaskForm):
     )
     submit = SubmitField("บันทึกการตั้งค่า")
 
+class DeleteAccountForm(FlaskForm):
+    password = PasswordField("ยืนยันรหัสผ่านเพื่อลบบัญชี", validators=[DataRequired()])
+    submit = SubmitField("ลบบัญชีถาวร")
 
 class ReviewForm(FlaskForm):
     rating = SelectField(
