@@ -47,3 +47,8 @@ class Config:
 
     # Portion of a sale that goes to the artist (rest is platform commission)
     DEFAULT_ARTIST_SHARE = 0.80
+
+
+   @app.errorhandler(413)
+   def too_large(e):
+       return render_template("error.html", code=413, message="ไฟล์ใหญ่เกินไป (สูงสุด 4 MB)"), 413
