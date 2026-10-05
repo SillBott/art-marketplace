@@ -21,7 +21,7 @@
     <p>{{ artwork.description or "ไม่มีคำอธิบาย" }}</p>
     <ul class="list-unstyled">
       <li><strong>เทคนิค:</strong> {{ artwork.technique or "-" }}</li>
-      <li><strong>ขนาด:</strong> {{ artwork.size or "-" }}</li>
+      <li><strong>ขนาด:</strong> {{ artwork.size_display }}</li>
       <li><strong>สถานะ:</strong>
         {% if artwork.status == 'available' %}
           <span class="text-success">พร้อมจำหน่าย</span>
