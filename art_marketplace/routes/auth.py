@@ -2,10 +2,25 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 
 from extensions import db
-from models import User, ArtistProfile, AuditLog
-from forms import RegisterForm, LoginForm, AccountForm, ChangePasswordForm
+from models import User, ArtistProfile, AuditLog, Order, OrderItem, Review, Like, Follow
+from forms import RegisterForm, LoginForm, AccountForm, ChangePasswordForm, DeleteAccountForm
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
+
+
+def _can_delete_account(user):
+    """A user can't self-delete once there's real transaction history tied
+    to them — deleting would break order records for themselves or buyers
+    of their artworks. They can still contact an admin in that case."""
+    if Order.query.filter_by(customer_id=user.id).first():
+        return False, "คุณมีประวัติการสั่งซื้อ ไม่สามารถลบบัญชีได้ด้วยตัวเอง กรุณาติดต่อแอดมิน"
+
+    if user.artist_profile:
+        artwork_ids = [a.id for a in user.artist_profile.artworks]
+        if artwork_ids and OrderItem.query.filter(OrderItem.artwork_id.in_(artwork_ids)).first():
+            return False, "ผลงานของคุณมีประวัติการสั่งซื้อ ไม่สามารถลบบัญชีได้ด้วยตัวเอง กรุณาติดต่อแอดมิน"
+
+    return True, None
 
 
 @bp.route("/register", methods=["GET", "POST"])
@@ -21,13 +36,10 @@ def register():
             flash("มีชื่อผู้ใช้หรืออีเมลนี้ในระบบแล้ว", "danger")
             return render_template("register.html", form=form)
 
-        # Everyone registers with the base "customer" role; picking
-        # "artist" just also creates an ArtistProfile so they can sell.
-        # Promotion to staff/admin is done later by an admin.
         user = User(username=form.username.data, email=form.email.data, role="customer")
         user.set_password(form.password.data)
         db.session.add(user)
-        db.session.flush()  # get user.id before commit
+        db.session.flush()
 
         if form.role.data == "artist":
             display_name = form.display_name.data or form.username.data
@@ -71,11 +83,15 @@ def logout():
     flash("ออกจากระบบแล้ว", "info")
     return redirect(url_for("gallery.index"))
 
+
 @bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
+    """Generic account-info page, available to every logged-in user
+    regardless of role (username/email + password change)."""
     account_form = AccountForm(obj=current_user, prefix="account")
     password_form = ChangePasswordForm(prefix="password")
+    delete_form = DeleteAccountForm(prefix="delete")
 
     if account_form.validate_on_submit():
         conflict = User.query.filter(
@@ -103,4 +119,57 @@ def account():
             flash("เปลี่ยนรหัสผ่านแล้ว", "success")
         return redirect(url_for("auth.account"))
 
-    return render_template("account.html", account_form=account_form, password_form=password_form)
+    return render_template(
+        "account.html", account_form=account_form,
+        password_form=password_form, delete_form=delete_form,
+    )
+
+
+@bp.route("/account/delete", methods=["POST"])
+@login_required
+def delete_account():
+    form = DeleteAccountForm(prefix="delete")
+    if not form.validate_on_submit():
+        flash("กรุณากรอกรหัสผ่านให้ถูกต้อง", "danger")
+        return redirect(url_for("auth.account"))
+
+    if not current_user.check_password(form.password.data):
+        flash("รหัสผ่านไม่ถูกต้อง", "danger")
+        return redirect(url_for("auth.account"))
+
+    ok, reason = _can_delete_account(current_user)
+    if not ok:
+        flash(reason, "danger")
+        return redirect(url_for("auth.account"))
+
+    if current_user.is_admin:
+        other_admins = User.query.filter(
+            User.role == "admin", User.id != current_user.id
+        ).count()
+        if other_admins == 0:
+            flash("ไม่สามารถลบได้ เนื่องจากเป็นแอดมินคนสุดท้ายของระบบ", "danger")
+            return redirect(url_for("auth.account"))
+
+    user_id = current_user.id
+    artist_profile = current_user.artist_profile
+
+    if artist_profile:
+        artwork_ids = [a.id for a in artist_profile.artworks]
+        if artwork_ids:
+            Review.query.filter(Review.artwork_id.in_(artwork_ids)).delete(synchronize_session=False)
+            Like.query.filter(Like.artwork_id.in_(artwork_ids)).delete(synchronize_session=False)
+        Follow.query.filter_by(artist_id=artist_profile.id).delete(synchronize_session=False)
+
+    AuditLog.query.filter_by(user_id=user_id).update({"user_id": None})
+    Order.query.filter_by(confirmed_by_id=user_id).update({"confirmed_by_id": None})
+    Review.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    Like.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+    Follow.query.filter_by(follower_id=user_id).delete(synchronize_session=False)
+
+    user = User.query.get(user_id)
+    logout_user()
+    db.session.delete(user)
+    db.session.commit()
+
+    flash("ลบบัญชีของคุณเรียบร้อยแล้ว", "info")
+    return redirect(url_for("gallery.index"))
