@@ -96,7 +96,9 @@ class Artwork(db.Model):
     title = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
     technique = db.Column(db.String(120))
-    size = db.Column(db.String(60))
+    size = db.Column(db.String(60))  # legacy free-text size, kept for old rows
+    width_cm = db.Column(db.Float)
+    height_cm = db.Column(db.Float)
     price = db.Column(db.Float, nullable=False)
 
     image_filename = db.Column(db.String(255))           # original / high-res
@@ -110,6 +112,17 @@ class Artwork(db.Model):
 
     artist = db.relationship("ArtistProfile", back_populates="artworks")
     category = db.relationship("Category", back_populates="artworks")
+
+    @property
+    def size_display(self):
+        """Width x height in cm when set, falling back to the old
+        free-text 'size' field for artworks created before this field
+        was split in two."""
+        if self.width_cm and self.height_cm:
+            w = f"{self.width_cm:g}"
+            h = f"{self.height_cm:g}"
+            return f"{w} x {h} ซม."
+        return self.size or "-"
 
     def __repr__(self):
         return f"<Artwork {self.title}>"
