@@ -31,4 +31,26 @@
   <a href="{{ url_for('artist.profile') }}">โปรไฟล์ศิลปิน</a>
 </p>
 {% endif %}
+
+<hr class="my-4">
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card border-danger">
+      <div class="card-body">
+        <h5 class="card-title text-danger">ลบบัญชี</h5>
+        <p class="card-text small text-muted">
+          การลบบัญชีไม่สามารถย้อนกลับได้ หากคุณเคยมีประวัติการสั่งซื้อ
+          หรือเป็นศิลปินที่ผลงานถูกซื้อไปแล้ว ระบบจะไม่ให้ลบบัญชีด้วยตัวเอง
+          (กรุณาติดต่อแอดมินแทน)
+        </p>
+        <form method="post" action="{{ url_for('auth.delete_account') }}" novalidate
+              onsubmit="return confirm('ยืนยันลบบัญชีถาวร? การกระทำนี้ไม่สามารถย้อนกลับได้');">
+          {{ delete_form.hidden_tag() }}
+          {{ render_field(delete_form.password) }}
+          <button type="submit" class="btn btn-danger">{{ delete_form.submit.label.text }}</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
