@@ -8,6 +8,9 @@ from wtforms.validators import (
     DataRequired, Email, EqualTo, Length, NumberRange, Optional,
 )
 
+def ascii_only(form, field):
+    if field.data and not field.data.isascii():
+        raise ValidationError("อีเมลใช้ได้เฉพาะภาษาอังกฤษ ตัวเลข และสัญลักษณ์ปกติ (ห้ามอีโมจิ)")
 
 class RegisterForm(FlaskForm):
     username = StringField("ชื่อผู้ใช้", validators=[DataRequired(), Length(3, 80)])
