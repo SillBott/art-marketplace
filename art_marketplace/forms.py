@@ -14,7 +14,7 @@ def ascii_only(form, field):
 
 class RegisterForm(FlaskForm):
     username = StringField("ชื่อผู้ใช้", validators=[DataRequired(), Length(3, 80)])
-    email = StringField("อีเมล", validators=[DataRequired(), Email(), Length(max=120)])
+    email = StringField("อีเมล", filters=[_strip], validators=[DataRequired(), Email(), Length(max=120), ascii_only])
     password = PasswordField("รหัสผ่าน", validators=[DataRequired(), Length(min=6)])
     confirm = PasswordField(
         "ยืนยันรหัสผ่าน",
