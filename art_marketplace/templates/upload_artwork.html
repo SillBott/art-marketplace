@@ -11,7 +11,10 @@
       {{ render_field(form.category_id) }}
       {{ render_field(form.description) }}
       {{ render_field(form.technique) }}
-      {{ render_field(form.size) }}
+      <div class="row">
+        <div class="col-6">{{ render_field(form.width_cm) }}</div>
+        <div class="col-6">{{ render_field(form.height_cm) }}</div>
+      </div>
       {{ render_field(form.price) }}
       {% if mode == "edit" and artwork and artwork.preview_filename %}
       <div class="mb-3">
